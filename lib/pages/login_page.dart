@@ -33,25 +33,37 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: _BuildUI(),
     );
   }
 
   Widget _BuildUI() {
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 15.0,
-          vertical: 20.0,
-        ),
-        child: Column(
-          children: [
-            _headerText(),
-            _loginForm(),
-            _loginButton(),
-            _createAccountLink(),
-          ],
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: 15.0,
+            vertical: 20.0,
+          ),
+          child: Column(
+            children: [
+              _headerText(),
+              SizedBox(
+                height: 20.0,
+              ),
+              Image.asset(
+                'assets/images/LiveChat.gif',
+                height: 280,
+              ),
+              _loginForm(),
+              _loginButton(),
+              SizedBox(
+                height: 20.0,
+              ),
+              _createAccountLink(),
+            ],
+          ),
         ),
       ),
     );
@@ -96,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             customFormField(
               labeltext: "Email",
-              height: MediaQuery.sizeOf(context).height * 0.15,
+              // height: MediaQuery.sizeOf(context).height * 0.15,
               validationRegEx: EMAIL_VALIDATION_REGEX,
               onSaved: (value) {
                 setState(() {
@@ -104,9 +116,12 @@ class _LoginPageState extends State<LoginPage> {
                 });
               },
             ),
+            SizedBox(
+              height: 20.0,
+            ),
             customFormField(
               labeltext: "Password",
-              height: MediaQuery.sizeOf(context).height * 0.12,
+              // height: MediaQuery.sizeOf(context).height * 0.12,
               validationRegEx: PASSWORD_VALIDATION_REGEX,
               obscureText: true,
               onSaved: (value) {
@@ -132,6 +147,10 @@ class _LoginPageState extends State<LoginPage> {
             print(result);
             if (result) {
               _navigationService.pushReplacementNamed("/home");
+              _alertServices.showTost(
+                text: "Logged in Successfully",
+                icon: Icons.check,
+              );
             } else {
               _alertServices.showTost(text: "Login Failed, Please Try again!");
             }
@@ -153,26 +172,24 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _createAccountLink() {
-    return Expanded(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          const Text('Don\'t have an account? '),
-          GestureDetector(
-            onTap: () {
-              _navigationService.pushNamed("/register");
-            },
-            child: const Text(
-              "Sign Up",
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-              ),
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const Text('Don\'t have an account? '),
+        GestureDetector(
+          onTap: () {
+            _navigationService.pushNamed("/register");
+          },
+          child: const Text(
+            "Sign Up",
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
             ),
-          )
-        ],
-      ),
+          ),
+        )
+      ],
     );
   }
 }

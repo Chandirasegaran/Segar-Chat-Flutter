@@ -3,7 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:segarchat/const.dart';
+import 'package:segarchat/models/user_profile.dart';
+import 'package:segarchat/services/alert_services.dart';
 import 'package:segarchat/services/auth_service.dart';
+import 'package:segarchat/services/database_service.dart';
 import 'package:segarchat/services/media_services.dart';
 import 'package:segarchat/services/navigation_service.dart';
 import 'package:segarchat/services/storage_service.dart';
@@ -24,6 +27,8 @@ class _RegisterPageState extends State<RegisterPage> {
   late NavigationService _navigationService;
   late MediaServices _mediaServices;
   late StorageService _storageService;
+  late DatabaseService _databaseService;
+  late AlertServices _alertServices;
 
   String? email, password, name;
   File? selectedImage;
@@ -36,34 +41,37 @@ class _RegisterPageState extends State<RegisterPage> {
     _navigationService = _getIt.get<NavigationService>();
     _authService = _getIt.get<AuthService>();
     _storageService = _getIt.get<StorageService>();
+    _databaseService = _getIt.get<DatabaseService>();
+    _alertServices = _getIt.get<AlertServices>();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: _buildUI(),
     );
   }
 
   Widget _buildUI() {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 15.0,
-          vertical: 20.0,
-        ),
-        child: Column(
-          children: [
-            _headerText(),
-            if (!isLoading) _registerForm(),
-            if (!isLoading) _loginAccountLink(),
-            if (isLoading)
-              const Expanded(
-                  child: Center(
-                child: CircularProgressIndicator(),
-              ))
-          ],
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 15.0,
+            vertical: 20.0,
+          ),
+          child: Column(
+            children: [
+              _headerText(),
+              if (!isLoading) _registerForm(),
+              if (!isLoading) _loginAccountLink(),
+              if (isLoading)
+                const Center(
+                  child: CircularProgressIndicator(),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -71,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _headerText() {
     return SizedBox(
-      width: MediaQuery.sizeOf(context).width,
+      width: MediaQuery.of(context).size.width,
       child: const Column(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -99,7 +107,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _registerForm() {
     return Container(
-        height: MediaQuery.sizeOf(context).height * 0.65,
+        // height: MediaQuery.sizeOf(context).height * 0.65,
         margin: EdgeInsets.symmetric(
             vertical: MediaQuery.sizeOf(context).height * 0.05),
         child: Form(
@@ -110,29 +118,41 @@ class _RegisterPageState extends State<RegisterPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               _profilePicSelector(),
-              SizedBox(height: MediaQuery.sizeOf(context).height * 0.02),
+              SizedBox(
+                height: 20.0,
+              ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
               customFormField(
-                  height: MediaQuery.sizeOf(context).height * 0.12,
+                  // height: MediaQuery.sizeOf(context).height * 0.12,
                   labeltext: "Name",
                   validationRegEx: NAME_VALIDATION_REGEX,
                   onSaved: (value) {
                     name = value;
                   }),
+              SizedBox(
+                height: 20.0,
+              ),
               customFormField(
-                  height: MediaQuery.sizeOf(context).height * 0.12,
+                  // height: MediaQuery.sizeOf(context).height * 0.12,
                   labeltext: "Email",
                   validationRegEx: EMAIL_VALIDATION_REGEX,
                   onSaved: (value) {
                     email = value;
                   }),
+              SizedBox(
+                height: 20.0,
+              ),
               customFormField(
-                  height: MediaQuery.sizeOf(context).height * 0.12,
+                  // height: MediaQuery.sizeOf(context).height * 0.12,
                   labeltext: "Password",
                   obscureText: true,
                   validationRegEx: PASSWORD_VALIDATION_REGEX,
                   onSaved: (value) {
                     password = value;
                   }),
+              SizedBox(
+                height: 25.0,
+              ),
               _registerButton(),
             ],
           ),
@@ -150,7 +170,8 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       },
       child: CircleAvatar(
-        radius: MediaQuery.of(context).size.width * 0.15,
+        // radius: MediaQuery.of(context).size.width * 0.15,
+        radius: 70,
         backgroundImage: selectedImage != null
             ? FileImage(selectedImage!)
             : NetworkImage(PLACEHOLDER_PFP) as ImageProvider,
@@ -160,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _registerButton() {
     return SizedBox(
-      width: MediaQuery.sizeOf(context).width,
+      width: MediaQuery.of(context).size.width,
       child: ElevatedButton(
         onPressed: () async {
           setState(() {
@@ -171,14 +192,37 @@ class _RegisterPageState extends State<RegisterPage> {
                 selectedImage != null) {
               _registerFormKey.currentState?.save();
               bool result = await _authService.signUp(email!, password!);
-              if (result) {}
-              String? profilePicUrl =
-                  await _storageService.uploadUserProfilePic(
-                      file: selectedImage!, userId: _authService.user!.uid);
-              print(result);
+              if (result) {
+                String? profilePicUrl =
+                    await _storageService.uploadUserProfilePic(
+                  file: selectedImage!,
+                  userId: _authService.user!.uid,
+                );
+                if (profilePicUrl != null) {
+                  await _databaseService.createUserProfile(
+                    userProfile: UserProfile(
+                        uid: _authService.user!.uid,
+                        name: name,
+                        pfpURL: profilePicUrl),
+                  );
+                  _alertServices.showTost(
+                    text: "User Registered Successfully",
+                    icon: Icons.check,
+                  );
+                  _navigationService.goBack();
+                  _navigationService.pushReplacementNamed('/home');
+                } else {
+                  throw Exception("Unable to upload user Profile Picture");
+                }
+              } else {
+                throw Exception("Unable to register user");
+              }
             }
           } catch (e) {
-            print(e);
+            _alertServices.showTost(
+              text: "Failed to register, Please try again!",
+              icon: Icons.error_outline,
+            );
           }
           setState(() {
             isLoading = false;
@@ -200,26 +244,47 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _loginAccountLink() {
-    return Expanded(
-      child: Row(
-        mainAxisSize: MainAxisSize.max,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          const Text('Already have an account? '),
-          GestureDetector(
-            onTap: () {
-              _navigationService.goBack();
-            },
-            child: const Text(
-              "Login",
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-              ),
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const Text('Already have an account? '),
+        GestureDetector(
+          onTap: () {
+            _navigationService.goBack();
+          },
+          child: const Text(
+            "Login",
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
             ),
-          )
-        ],
-      ),
+          ),
+        )
+      ],
     );
   }
 }
+
+// Widget _buildUI() {
+//   return SafeArea(
+//     child: Padding(
+//       padding: const EdgeInsets.symmetric(
+//         horizontal: 15.0,
+//         vertical: 20.0,
+//       ),
+//       child: Column(
+//         children: [
+//           _headerText(),
+//           if (!isLoading) _registerForm(),
+//           if (!isLoading) _loginAccountLink(),
+//           if (isLoading)
+//             const Expanded(
+//                 child: Center(
+//               child: CircularProgressIndicator(),
+//             ))
+//         ],
+//       ),
+//     ),
+//   );
+// }

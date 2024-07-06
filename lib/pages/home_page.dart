@@ -19,7 +19,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     _authService = _getIt.get<AuthService>();
     _navigationService = _getIt.get<NavigationService>();
@@ -48,8 +47,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: Center(
-        child: Text("Hello World"),
+      body: const Center(
+        child: Text("Hello Segar"),
       ),
     );
   }

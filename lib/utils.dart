@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:segarchat/firebase_options.dart';
 import 'package:segarchat/services/alert_services.dart';
 import 'package:segarchat/services/auth_service.dart';
+import 'package:segarchat/services/database_service.dart';
 import 'package:segarchat/services/media_services.dart';
 import 'package:segarchat/services/navigation_service.dart';
 import 'package:segarchat/services/storage_service.dart';
@@ -32,5 +33,8 @@ Future<void> registerServices() async {
   );
   getIt.registerSingleton<StorageService>(
     StorageService(),
+  );
+  getIt.registerSingleton<DatabaseService>(
+    DatabaseService(),
   );
 }
