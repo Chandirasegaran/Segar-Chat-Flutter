@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:segarchat/pages/home_page.dart';
 import 'package:segarchat/pages/login_page.dart';
 import 'package:segarchat/pages/register_page.dart';
@@ -29,6 +27,10 @@ class NavigationService {
 
   void pushNamed(String routeName) {
     _navigatorKey.currentState?.pushNamed(routeName);
+  }
+
+  void push(MaterialPageRoute route) {
+    _navigatorKey.currentState?.push(route);
   }
 
   void pushReplacementNamed(String routeName) {

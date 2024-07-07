@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:segarchat/models/user_profile.dart';
+import 'package:segarchat/pages/chat_page.dart';
 import 'package:segarchat/services/alert_services.dart';
 import 'package:segarchat/services/auth_service.dart';
 import 'package:segarchat/services/database_service.dart';
@@ -86,7 +87,25 @@ class _HomePageState extends State<HomePage> {
                     padding: const EdgeInsets.symmetric(
                       vertical: 10.0,
                     ),
-                    child: ChatTile(userProfile: user, onTap: () {}),
+                    child: ChatTile(
+                        userProfile: user,
+                        onTap: () async {
+                          final chatExists =
+                              await _databaseService.checkChatExists(
+                            _authService.user!.uid,
+                            user.uid!,
+                          );
+                          if (!chatExists) {
+                            await _databaseService.createNewChat(
+                                _authService.user!.uid, user.uid!);
+                          }
+                          _navigationService
+                              .push(MaterialPageRoute(builder: (context) {
+                            return ChatPage(
+                              chatUser: user,
+                            );
+                          }));
+                        }),
                   );
                 });
           }
