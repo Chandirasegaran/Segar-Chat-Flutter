@@ -9,7 +9,6 @@ import 'package:segarchat/services/media_services.dart';
 import 'package:segarchat/services/navigation_service.dart';
 import 'package:segarchat/services/storage_service.dart';
 
-// import 'firebase_options.dart'
 
 Future<void> setupFirebase() async {
   await Firebase.initializeApp(
